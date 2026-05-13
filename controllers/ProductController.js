@@ -1,44 +1,130 @@
-import { products } from "../constants.js";
+import { Product } from "../models/productModel.js";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-export const getSingleProducts = (req,res) =>{
-    const {id} = req.params;
-    const product = products.find(item => item.id === Number(id));
-    
+// Get all products
+export const getProducts = async (req, res) => {
+  try {
+    const products = await Product.findAll();
+    res.json({
+      message: "get all products successfully",
+      data: products,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get single product
+export const getSingleProduct = async (req, res) => {
+  try {
+    const product = await Product.findByPk(req.params.productId);
     if (!product) {
-        res.status(404).json({
-        messsage : "Data not Found. Please enter another ID ",
-    })
+      return res.status(404).json({ message: "Product not found" });
     }
-    
     res.json({
-        messsage : "Data Found Successfully",
-        data : product,
-    })
-}
+      message: "product fetched successfully",
+      data: product,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 
-export const getProducts = (req,res) => {
+// Create product
+export const createProduct = async (req, res) => {
+  try {
+    const {
+      productName,
+      price,
+      availibity,
+      category,
+      freeShipping,
+      description,
+    } = req.body;
 
-    res.json({
-        message : "Get all products Successfully",
-        data : products
-    })
-}
+    const image = req.file ? req.file.filename : null;
 
-export const createProducts = (req,res) => {
-    const products = req.body;
-    const response = {
-        message : "Message Created Successfully",
-        data : products
+    const product = await Product.create({
+      productName,
+      price,
+      availibity,
+      category,
+      freeShipping,
+      description,
+      image,
+    });
+
+    res.status(201).json({
+      message: "product created successfully",
+      data: product,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Update product
+export const updateProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { productName, title, price, description } = req.body;
+
+    const product = await Product.findByPk(id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
     }
-    res.json(response)
-}
 
-export const updateProducts = (req,res) => {
-    const {id} = req.params;
-    res.send(`Updated Products ${id}`)
-}
+    const updateData = {
+      productName: productName || product.productName,
+      title: title || product.title,
+      price: price || product.price,
+      description: description || product.description,
+    };
 
-export const deleteProducts = (req,res) => {
-    res.send("Products Deleted Successfully")
-}
+    if (req.file) {
+      // Delete old image
+      const oldImagePath = path.join(__dirname, "../uploads/", product.image);
+      if (fs.existsSync(oldImagePath)) {
+        fs.unlinkSync(oldImagePath);
+      }
+      updateData.image = req.file.filename;
+    }
+
+    await product.update(updateData);
+
+    res.json({
+      message: "product updated successfully",
+      data: product,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Delete product
+export const deleteProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const product = await Product.findByPk(id);
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Delete image file
+    const imagePath = path.join(__dirname, "../uploads/", product.image);
+    if (fs.existsSync(imagePath)) {
+      fs.unlinkSync(imagePath);
+    }
+
+    await product.destroy();
+    res.json({ message: "product deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

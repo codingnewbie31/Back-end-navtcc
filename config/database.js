@@ -7,18 +7,13 @@ const sequelize = new Sequelize("navtech-db", "root", "", {
   logging: false,
 });
 
-const connectDB = async (force = false) => {
+const connectDB = async () => {
   try {
     await sequelize.authenticate();
     console.log("Connection has been established successfully.");
 
-    await sequelize.sync({ force: force });
-
-    if (force) {
-      console.log("Database synced with force: true - All tables recreated");
-    } else {
-      console.log("Database synced with force: false - Tables preserved");
-    }
+    await sequelize.sync({ alter: false });
+    console.log("Database synced - Tables updated");
 
     return true;
   } catch (error) {

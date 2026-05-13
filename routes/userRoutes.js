@@ -4,14 +4,23 @@ import {
   deleteUser,
   getSingleUsers,
   getUsers,
+  logInUser,
   updateUser,
 } from "../controllers/userController.js";
+import { authenticateUser, authorizeAdmin } from "../auth/authentication.js";
+
 const route = express.Router();
 
-route.get("/user", getUsers);
-route.get("/user/:id", getSingleUsers);
+route.post("/login",logInUser);
+
 route.post("/user", createUser);
-route.put("/user/:id", updateUser);
-route.delete("/user/:id", deleteUser);
+
+route.get("/user",authenticateUser, authorizeAdmin,getUsers);
+
+route.get("/user/:id", authenticateUser, getSingleUsers);
+
+route.put("/user/:id", authenticateUser, updateUser);
+
+route.delete("/user/:id", authenticateUser, deleteUser);
 
 export default route;
