@@ -1,4 +1,5 @@
 import express from "express";
+import { upload } from "../config/multer.js";
 import {
   getProducts,
   getSingleProduct,
@@ -7,14 +8,14 @@ import {
   deleteProduct,
 } from "../controllers/productController.js";
 
-const router = express.Router();
+const route = express.Router();
 
-router.get("/get-products", getProducts);
-router.get("/get-products/:productId", getSingleProduct);
+route.get("/get-products", getProducts);
+route.get("/get-products/:productId", getSingleProduct);
 
-router.post("/create-product", createProduct);
-router.put("/update-product/:id", updateProduct);
+route.post("/create-product", upload.single("image"), createProduct);
+route.put("/update-product/:id", upload.single("image"), updateProduct);
 
-router.delete("/delete-product/:id", deleteProduct);
+route.delete("/delete-product/:id", deleteProduct);
 
-export default router;
+export default route;

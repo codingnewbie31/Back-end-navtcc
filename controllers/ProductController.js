@@ -41,7 +41,8 @@ export const createProduct = async (req, res) => {
     const {
       productName,
       price,
-      availibity,
+      oldPrice,
+      inStock,
       category,
       freeShipping,
       description,
@@ -52,11 +53,12 @@ export const createProduct = async (req, res) => {
     const product = await Product.create({
       productName,
       price,
-      availibity,
+      oldPrice,
+      inStock,
       category,
       freeShipping,
       description,
-      image,
+      image, 
     });
 
     res.status(201).json({
@@ -72,7 +74,15 @@ export const createProduct = async (req, res) => {
 export const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { productName, title, price, description } = req.body;
+    const {
+      productName,
+      price,
+      oldPrice,
+      inStock,
+      category,
+      freeShipping,
+      description,
+    } = req.body;
 
     const product = await Product.findByPk(id);
     if (!product) {
@@ -81,16 +91,22 @@ export const updateProduct = async (req, res) => {
 
     const updateData = {
       productName: productName || product.productName,
-      title: title || product.title,
       price: price || product.price,
+      oldPrice: oldPrice || product.oldPrice,
+      inStock: inStock || product.inStock,
+      category: category || product.category,
+      freeShipping: freeShipping || product.freeShipping,
       description: description || product.description,
     };
 
+
     if (req.file) {
-      // Delete old image
-      const oldImagePath = path.join(__dirname, "../uploads/", product.image);
-      if (fs.existsSync(oldImagePath)) {
-        fs.unlinkSync(oldImagePath);
+      // ✅ only delete old image if it exists
+      if (product.image) {
+        const oldImagePath = path.join(__dirname, "../uploads/", product.image);
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+        }
       }
       updateData.image = req.file.filename;
     }
@@ -116,10 +132,12 @@ export const deleteProduct = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    // Delete image file
-    const imagePath = path.join(__dirname, "../uploads/", product.image);
-    if (fs.existsSync(imagePath)) {
-      fs.unlinkSync(imagePath);
+    // ✅ only delete image if it exists
+    if (product.image) {
+      const imagePath = path.join(__dirname, "../uploads/", product.image);
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
     }
 
     await product.destroy();

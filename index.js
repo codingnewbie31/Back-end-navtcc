@@ -2,17 +2,25 @@ import express from "express";
 import productRoutes from "./routes/productRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import currencyRoutes from "./routes/currencyRoutes.js";
-import { Sequelize } from "sequelize";
 import { connectDB } from "./config/database.js";
 import cors from 'cors'
 import categoryRoutes from "./routes/categoryRoutes.js";
 import dotenv from "dotenv";
+import path from "path";                  
+import { fileURLToPath } from "url"; 
+
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const port = 3000;
 app.use(cors())
 app.use(express.json());
-dotenv.config();
+
+app.use(express.urlencoded({ extended: true }));                      
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 
 async function initializeApp() {
